@@ -5,53 +5,69 @@ import androidx.lifecycle.viewModelScope
 import com.abhinay.cleancountries.domain.Country
 import com.abhinay.cleancountries.domain.GetCountriesUseCase
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 
 /**
  * Created by Abhinay on 01/10/25.
  */
 class CountriesViewModel(
-    private val getCountriesUseCase: GetCountriesUseCase
+    private val useCase: GetCountriesUseCase
 ) : ViewModel() {
 
-    // UI visible state
-    private val _countries = MutableStateFlow<List<Country>>(emptyList())
-    val countries: StateFlow<List<Country>> = _countries.asStateFlow()
 
-    // search query flow (debounced)
-    private val searchQuery = MutableStateFlow("")
+    private val _query = MutableStateFlow("")
+    val query: StateFlow<String> = _query.asStateFlow()
+
+    private val _uiState = MutableStateFlow<CountryUiState>(CountryUiState.Idle)
+    val uiState: StateFlow<CountryUiState> = _uiState.asStateFlow()
+
 
     init {
-        // 1) Load initial all countries once (fallback)
-        viewModelScope.launch {
-            getCountriesUseCase.getAllCountries().collect { list ->
-                _countries.value = list
 
-            }
-        }
         // 2) React to searchQuery with debounce -> update countries list
         @OptIn(FlowPreview::class)
         viewModelScope.launch {
-            searchQuery
+            _query
                 .debounce(300)   // wait 300ms after user stops typing
                 .distinctUntilChanged()
                 .flatMapLatest { query ->
-                    getCountriesUseCase.searchCountries(query)  // returns Flow<List<Country>>
+                    // get a Flow<List<Country>> from useCase, then map to UiState Flow
+                    val source : Flow<List<Country>> =
+                        if (query.isBlank()) useCase.getAllCountries()
+                        else useCase.searchCountries(query)
+
+                    source
+                        .map<List<Country>, CountryUiState> { list ->
+                              CountryUiState.Success(list)
+                        }
+                        .onStart {
+                            // Emit Loading before the first item
+                            emit(CountryUiState.Loading)
+                        }
+                        .catch { e ->
+                            emit(CountryUiState.Error(e.message ?: "Unknown error"))
+                        }
+
                 }
-                .collect { filtered ->
-                    _countries.value = filtered
+                .collect { state ->
+                    _uiState.value = state
                 }
+
         }
     }
 
     fun onSearchQueryChange(query: String) {
-        searchQuery.value = query
+        _query.value = query
     }
 
 
