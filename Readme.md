@@ -67,7 +67,7 @@ Copy code
 This is where the reactive & debounce behavior lives.
 
 ### Key fields:
-
+```kotlin
 private val _countries = MutableStateFlow<List<Country>>(emptyList())
 val countries: StateFlow<List<Country>> = _countries.asStateFlow()
 
