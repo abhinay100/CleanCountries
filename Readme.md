@@ -67,7 +67,7 @@ Copy code
 This is where the reactive & debounce behavior lives.
 
 ### Key fields:
-```kotlin
+
 private val _countries = MutableStateFlow<List<Country>>(emptyList())
 val countries: StateFlow<List<Country>> = _countries.asStateFlow()
 
@@ -77,8 +77,7 @@ Collect useCase.getAllCountries() once to populate initial _countries.
 
 Listen to searchQuery and run:
 
-kotlin
-Copy code
+
 searchQuery
   .debounce(300) // wait 300ms after last keystroke
   .distinctUntilChanged()
@@ -101,16 +100,14 @@ On each onValueChange → updates searchQuery in ViewModel.
 
 UI collects state via:
 
-kotlin
-Copy code
+
 val countries by viewModel.countries.collectAsState()
 LazyColumn displays list → recomposes when countries updates.
 
 Wiring — MainActivity
 Manual Dependency Injection:
 
-kotlin
-Copy code
+
 val repository = HardcodedCountryRepository()
 val useCase = GetCountriesUseCase(repository)
 val factory = CountriesViewModelFactory(useCase)
@@ -181,8 +178,7 @@ Scalable → swap repo, add DI, Paging, persistence with minimal change.
 
 Quick code snippets
 Debounce in ViewModel
-kotlin
-Copy code
+
 searchQuery
   .debounce(300)
   .distinctUntilChanged()
@@ -192,8 +188,7 @@ searchQuery
   }
   .collect { _countries.value = it }
 Compose collection
-kotlin
-Copy code
+
 val countries by viewModel.countries.collectAsState()
 LazyColumn {
     items(countries) { CountryRow(it) }
