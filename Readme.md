@@ -66,6 +66,13 @@ Copy code
 
 This is where the reactive & debounce behavior lives.
 
+## Loading State Enhancement (branch: feature/loading-state)
+
+Adds:
+- `CountryUiState` sealed class (Idle, Loading, Success, Error)
+- ViewModel emits Loading before results
+- Compose UI displays spinner during loading and friendly messages for Idle / No results
+
 ### Key fields:
 ```kotlin
 private val _countries = MutableStateFlow<List<Country>>(emptyList())
