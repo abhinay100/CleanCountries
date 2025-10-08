@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.abhinay.cleancountries.domain.Country
 import com.abhinay.cleancountries.domain.GetCountriesUseCase
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,11 +17,13 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /**
  * Created by Abhinay on 01/10/25.
  */
-class CountriesViewModel(
+@HiltViewModel
+class CountriesViewModel @Inject constructor(
     private val useCase: GetCountriesUseCase
 ) : ViewModel() {
 
